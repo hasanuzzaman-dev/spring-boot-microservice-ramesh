@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/employee_service # PostgreSQL connection URL
+    username: postgres # Replace with your PostgreSQL username
+    password: postgres # Replace with your PostgreSQL password
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+server:
+  port: 8081
