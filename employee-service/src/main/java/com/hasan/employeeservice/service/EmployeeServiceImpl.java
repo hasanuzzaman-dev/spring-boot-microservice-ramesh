@@ -6,9 +6,7 @@ import com.hasan.employeeservice.entity.Employee;
 import com.hasan.employeeservice.mapper.EmployeeMapper;
 import com.hasan.employeeservice.repository.EmployeeRepository;
 import lombok.AllArgsConstructor;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 
 @Service
 @AllArgsConstructor
@@ -16,7 +14,7 @@ public class EmployeeServiceImpl implements EmployeeService {
 
     private final EmployeeRepository employeeRepository;
     private final EmployeeMapper employeeMapper;
-    private final RestTemplate restTemplate;
+    private final APIClient apiClient;
 
     @Override
     public EmployeeDto save(EmployeeDto employeeDto) {
@@ -34,12 +32,7 @@ public class EmployeeServiceImpl implements EmployeeService {
         EmployeeDto employeeDto = employeeMapper.toDto(employee);
 
         if (employee != null && employee.getDepartmentCode() != null) {
-            ResponseEntity<DepartmentDto> responseEntity =   restTemplate.getForEntity(
-                    "http://localhost:8080/api/departments/"+employee.getDepartmentCode(),
-                    DepartmentDto.class
-            );
-
-            DepartmentDto departmentDto = responseEntity.getBody();
+            DepartmentDto departmentDto = apiClient.getDepartmentByCode(employee.getDepartmentCode());
             employeeDto.setDepartment(departmentDto);
         }
 
