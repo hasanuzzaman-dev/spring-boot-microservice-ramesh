@@ -22,4 +22,6 @@ public class EmployeeDto {
     private String email;
 
     private LocalDateTime createdAt;
+
+    private DepartmentDto department;
 }
