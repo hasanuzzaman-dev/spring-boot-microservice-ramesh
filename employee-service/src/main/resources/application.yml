@@ -1,4 +1,7 @@
 spring:
+  application:
+    name: "employee-service"
+
   datasource:
     url: jdbc:postgresql://localhost:5432/employee_service # PostgreSQL connection URL
     username: postgres # Replace with your PostgreSQL username
@@ -12,3 +15,8 @@ spring:
       ddl-auto: update
 server:
   port: 8081
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
