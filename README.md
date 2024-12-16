@@ -1,19 +1,25 @@
-# Spring Cloud OpenFeing
+# Spring Cloud APIGateWay
 
-This guide demonstrates how to configure and use Spring Cloud OpenFeing for making non-blocking REST API calls.
+This guide demonstrates how to configure and use Spring Cloud APIGateWay for making non-blocking REST API calls.
 
 ---
 
 ## Steps to Set Up and Test
 
-### 1. Add OpenFeign Dependency
+### 1. Add APIGateWay Dependency
 
 Add the following dependency to your `pom.xml` (for Maven):
 
 ```xml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-openfeign</artifactId>
+    <artifactId>spring-cloud-starter-gateway</artifactId>
+</dependency>
+```
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
 </dependency>
 ```
 ```xml
@@ -32,59 +38,73 @@ Add the following dependency to your `pom.xml` (for Maven):
 
 ```xml
 <properties>
-        <spring-cloud.version>2023.0.4</spring-cloud.version>
+    <spring-cloud.version>2024.0.0</spring-cloud.version>
 </properties>
 ```
-### 2. Enable OpenFeign
+### 2. Enable Eureka Client
 
 ```java
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.cloud.openfeign.EnableFeignClients;
-
 @SpringBootApplication
-@EnableJpaAuditing
-@EnableFeignClients
-public class EmployeeServiceApplication {
+@AutoConfiguration // Enable Eureka Client
+public class ApiGatewayApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(EmployeeServiceApplication.class, args);
+        SpringApplication.run(ApiGatewayApplication.class, args);
     }
 
 }
 
 ```
-### 3. Define a Feign Client Interface
-```java
-import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.web.bind.annotation.GetMapping;
+### 3. Configure in application.yml
+```yaml
+spring:
+  application:
+    name: API-GATEWAY
 
-@FeignClient(name = "DEPARTMENT_SERVICE", url = "http://localhost:8080")
-public interface APIClient {
+  #Automatic creating route
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+# Manual creating route
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: EMPLOYEE-SERVICE
+#          uri: lb://EMPLOYEE-SERVICE
+#          predicates:
+#            - Path=/api/employees/**
+#        - id: DEPARTMENT-SERVICE
+#          uri:
+#            lb://DEPARTMENT-SERVICE
+#          predicates:
+#            - Path=/api/departments/**
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway:
+            handler:
+              RoutePredicateHandlerMapping: DEBUG
+server:
+  port: 9091
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
 
-    @GetMapping("/api/departments/{department-code}")
-    DepartmentDto getDepartment(@PathVariable("department-code") String code);
-}
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
 
-```
-### 4. Inject and Use the Feign Client
-```java
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-@Service
-public class ExampleService {
-
-    private final ExampleClient exampleClient;
-
-    @Autowired
-    public ExampleService(ExampleClient exampleClient) {
-        this.exampleClient = exampleClient;
-    }
-
-    public String fetchExampleData() {
-        return exampleClient.getExampleData();
-    }
-}
 ```
 ### 5. API Testing
+
+```url
+http://localhost:9091/employee-service/api/employees/1
+```

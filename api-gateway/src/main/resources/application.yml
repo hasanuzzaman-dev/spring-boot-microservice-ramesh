@@ -1,19 +1,35 @@
 spring:
   application:
     name: API-GATEWAY
+
+#Automatic creating route
   cloud:
     gateway:
-      routes:
-        - id: EMPLOYEE-SERVICE
-          uri: lb://EMPLOYEE-SERVICE
-          predicates:
-            - Path=/api/employees/**
-        - id: DEPARTMENT-SERVICE
-          uri:
-            lb://DEPARTMENT-SERVICE
-          predicates:
-            - Path=/api/departments/**
-
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+# Manual creating route
+#  cloud:
+#    gateway:
+#      routes:
+#        - id: EMPLOYEE-SERVICE
+#          uri: lb://EMPLOYEE-SERVICE
+#          predicates:
+#            - Path=/api/employees/**
+#        - id: DEPARTMENT-SERVICE
+#          uri:
+#            lb://DEPARTMENT-SERVICE
+#          predicates:
+#            - Path=/api/departments/**
+logging:
+  level:
+    org:
+      springframework:
+        cloud:
+          gateway:
+            handler:
+              RoutePredicateHandlerMapping: DEBUG
 server:
   port: 9091
 eureka:
