@@ -1,19 +1,24 @@
-# Spring Cloud APIGateWay
+# Spring Cloud CONFIG-SERVER
 
-This guide demonstrates how to configure and use Spring Cloud APIGateWay for making non-blocking REST API calls.
+#### A Config Server in Spring Cloud is a centralized service that manages external configurations for distributed applications across different environments. It allows you to store configuration files in a remote repository (such as Git) and serve them to client applications dynamically.
+
+
+This guide demonstrates how to configure and use Spring Cloud config-server for making non-blocking REST API calls.
 
 ---
 
 ## Steps to Set Up and Test
 
-### 1. Add APIGateWay Dependency
+### 1. Create Spring boot project as config-server
+
+### 2. Add config-server Dependency
 
 Add the following dependency to your `pom.xml` (for Maven):
 
 ```xml
 <dependency>
     <groupId>org.springframework.cloud</groupId>
-    <artifactId>spring-cloud-starter-gateway</artifactId>
+    <artifactId>spring-cloud-config-server</artifactId>
 </dependency>
 ```
 ```xml
@@ -41,70 +46,105 @@ Add the following dependency to your `pom.xml` (for Maven):
     <spring-cloud.version>2024.0.0</spring-cloud.version>
 </properties>
 ```
-### 2. Enable Eureka Client
-
+### 3. Enable config-server
 ```java
 @SpringBootApplication
-@AutoConfiguration // Enable Eureka Client
-public class ApiGatewayApplication {
+@EnableConfigServer
+public class MyconfigServerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(ApiGatewayApplication.class, args);
+        SpringApplication.run(MyconfigServerApplication.class, args);
     }
-
 }
 
 ```
-### 3. Configure in application.yml
+### 4.Register config server as Eureka Client
+Use @AutoConfiguration for enable eureka client and change application.yml
+```yaml
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+```
+### 5. Setup git location for Config Server
+```url
+https://github.com/hasanuzzaman-dev/config-server1
+```
 ```yaml
 spring:
   application:
-    name: API-GATEWAY
-
-  #Automatic creating route
+    name: config-server
   cloud:
-    gateway:
-      discovery:
-        locator:
-          enabled: true
-          lower-case-service-id: true
-# Manual creating route
-#  cloud:
-#    gateway:
-#      routes:
-#        - id: EMPLOYEE-SERVICE
-#          uri: lb://EMPLOYEE-SERVICE
-#          predicates:
-#            - Path=/api/employees/**
-#        - id: DEPARTMENT-SERVICE
-#          uri:
-#            lb://DEPARTMENT-SERVICE
-#          predicates:
-#            - Path=/api/departments/**
-logging:
-  level:
-    org:
-      springframework:
-        cloud:
-          gateway:
-            handler:
-              RoutePredicateHandlerMapping: DEBUG
+    config:
+      server:
+        git:
+          uri: https://github.com/hasanuzzaman-dev/config-server1
+          clone-on-start: true
+          default-label: main
+```
+### 6. Refactor other service for config-server
+Add the following dependency to your `pom.xml` (for Maven):
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-actuator</artifactId>
+</dependency>
+```
+```xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-config</artifactId>
+</dependency>
+```
+
+### 7. create a service-name.yml file in config-server repository and paste configuration
+```yaml
 server:
-  port: 9091
+  port: 8082
+
+spring:
+  application:
+    name: DEPARTMENT-SERVICE
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/department-service
+    username: root
+    password: sa123
+
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+    hibernate:
+      ddl-auto: update
+
 eureka:
   client:
     service-url:
       defaultZone: http://localhost:8761/eureka/
 
-management:
-  endpoints:
-    web:
-      exposure:
-        include: '*'
-
 ```
-### 5. API Testing
 
+### 8. Comment out all in application.yml file without bellow
+```yml
+spring:
+  application:
+    name: DEPARTMENT-SERVICE
+  config:
+    import: optional:configserver:http://localhost:8888
+```
+
+### 9. Refresh use case
+We need to call spring boot actuator/refresh api to reload updated values from config server.
 ```url
-http://localhost:9091/employee-service/api/employees/1
+http://localhost:8082/message
 ```
+In order to reload the config changes in config client application like (department-service or employee-service) 
+We need to trigger /refresh endpoint manually. This is not a viable solution if you have large number of applications.
+
+Spring cloud bus module provides a solution.
+
+
+### 10. Spring Cloud Bus
+#### Spring cloud bus module can be used to link multiple applications with message broker, and we can broadcast configuration changes
+
