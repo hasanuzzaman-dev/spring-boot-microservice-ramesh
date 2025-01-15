@@ -1,14 +1,28 @@
 spring:
-  datasource:
-    url: jdbc:postgresql://localhost:5432/employee_service # PostgreSQL connection URL
-    username: postgres # Replace with your PostgreSQL username
-    password: postgres # Replace with your PostgreSQL password
-
-  jpa:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-    hibernate:
-      ddl-auto: update
-server:
-  port: 8081
+  application:
+    name: EMPLOYEE-SERVICE
+  config:
+    import: optional:configserver:http://localhost:8888
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/employee_service # PostgreSQL connection URL
+#    username: postgres # Replace with your PostgreSQL username
+#    password: postgres # Replace with your PostgreSQL password
+#
+#  jpa:
+#    properties:
+#      hibernate:
+#        dialect: org.hibernate.dialect.PostgreSQLDialect
+#    hibernate:
+#      ddl-auto: update
+#server:
+#  port: 8081
+#
+#eureka:
+#  client:
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka/
